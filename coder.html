@@ -1,457 +1,515 @@
 ﻿<!DOCTYPE html>
 <html>
-<head>
-	<meta http-equiv="content-type" content="text/html; charset=utf-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>Coder</title>
-	<style>
-		body
-		{
-			background-color: #000000;
-			color: #00ff00;
-		}
-		#title
-		{
-			font-size: 2rem;
-		}
-		input[type=button]
-		{
-			background-color: #00ff00;
-			color: #000000;
-			border-color: #00ff00;
-			border-style: solid;
-		}
-		#in
-		{
-			background-color: #000000;
-			color: #000000;
-			border-color: #00ff00;
-			border-style: dashed;
-		}
-		#out
-		{
-			background-color: #000000;
-			color: #000000;
-			border-color: #00ff00;
-			border-style: dashed;
-		}
-		#out2
-		{
-			 opacity: 0;
-			 height: 0;
-			 width: 0;
-		}
-		#pas, #pas2
-		{
-			background-color: #000000;
-			color: #000000;
-			border-color: #00ff00;
-			border-style: dotted;
-		}
-		input, textarea, div
-		{
-			font-size: 1.4rem;
-		}
-		#down
-		{
-			position: fixed;
-			right: 0px;
-			top: 0px;	
-		}
-		#down > input
-		{
-			padding: 0px;
-		}
-		.unsel
-		{
-			cursor: default;
-			-webkit-touch-callout: none;
-			-webkit-user-select: none;
-			-khtml-user-select: none;
-			-moz-user-select: none;
-			-ms-user-select: none;
-			-o-user-select: none;
-			user-select: none;
-		}
-	</style>
-	<script>
-		//declaring 
-		var str;
-		var secure=true;
-		var charlist="";
-		var how2use="<br>It is a coder/decoder script, the first textarea is the input, the second is the output, "+
-		"the two text input at top are the passwords (password type input). (If you wana see the texts you need to switch off the secure mode.) "+
-		"If you write something text into the input textarea, "+
-		"and type the \"key\" into the password inputs (both 'cuz of misstyping), then you could make a coded text with "+
-		"the \"Code\" button. The script go trough the input text and the password (at same time), and \"sum\" every input char with every password char "+
-		"(technically every input char get an other place in the \"charlist\" like Caesar Code or Caesar Cipher), if the script at end of the password, "+
-		"then go to the first char of the password. The output get the coded text, then you could send this text to someone, and he/she able to decoding, "+
-		"if he/she has the key (password). You could copy to the clipboard the output text with \"Copy\" button. You could decoding the coded text, if you put the "+
-		"decoded text to the input, type in the password (to the first password input, second is not needed), then push the \"Decode\" button. "+
-		"The original text appear in the output textarea. If you have to coding with numbers, for steganography (eg.: you make a facebook math solving post "+
-		"where the 150/142, 151/171, 136/153, 158/149, 165/152, 160/136, 135/161, 147/149, 156/133 nums need to sorting by increase, then the people solve the "+
-		"operations and make the list, but your man will knows that it could be a message, write the nums into the textarea, type in the \"secretpass\" password "+
-		"and decode the nums to the \"citycentremcdonald\" text, so he will knows, you are waiting him for a super secret meeting or something), "+
-		"you write in the text to the input, tpye in the passwords, then push the \"Code[Nums]\" button, and the script go trough the text and the password, "+
-		"like before, but this time, the \"summed\" numbers, stay just numbers with # marks, if these numbers with # put in the input textarea and push the "+
-		"\Decode[Nums]\" button, then the script take all numbers into an array split at the # marks (don't matter the last char is num or #) "+
-		"and with the password decoding to the original text. The Delete buttons clear the textareas (\"Delete all\" the passwords too). "+
-		"<br><br>Limitations:<ul style='list-style-type:square'>"+
-		"<li>Inputs are only have just a few simple characters, at the bottom the last button shows them.</li>"+
-		"<li>Space and other \"white spaces\" chars remove from all input before coding (at decoding, there is just alert messages).</li>"+
-		"<li>All inputs have to be between 2 - 10 000 char.</li>"+
-		"<li>The nums decoding work with only just # marks.</li>"+
-		"<li>If your password is \"appletree\" and you coding the \"Secretmessage\" to \"5VT_Ki`KYURXR\" and send to someone on a compromised line, "+
-		"may someone could wiretaping, then he/she write into the input textarea, and if type just the \"apple\" password he/she gets the \"Secre(oZlopga\", "+
-		"then he/she propably will figure out the second part of the password, and able to decode every message (coded with the \"appletree\" password).</li>"+
-		"<li>This script tested on firefox (95.0.2) on a Linux, may some feature doesn't work on other Browsers.</li></ul>"+
-		"Features:<ul style='list-style-type:square'>"+
-		"<li>Secure mode: When it is switch on, every input and output unselectable and hided, if your monitor is hacked (eg.: in the Mr. robot), "+
-		"you still can make a secret message with secret passwords, if you have a keylogger or other kinda hack the secure mode doesn't work.</li>"+
-		"<li>You could download this html file with the button at the right corner (or right click and download), this coder is a simple "+
-		"JavaScript with some html and css, without any kinda of jQuery, php, google fonts, remote scripts or anything, so you can use "+
-		"offline (may you wana coding/decoding an all time offline, more unhackable pc/phone).</li>"+
-		"</ul>";
-		
-		//go trough all usable character and put into the characterlist
-		for( var i=32 ; i < 127 ; i++ )
-		{
-			if( i%32 == 0 )
-			{
-				charlist+="<br>";
-			}
-			charlist+=String.fromCharCode(i);
-		}
-		
-		//take the original text and coding(default: coding to an other random text, and not to numbers)
-		function code(numbers=false)
-		{
-			document.getElementById("title").textContent="Coder";
-			//before coding, remove the white spaces
-			document.getElementById("pas").value=document.getElementById("pas").value.replace(/\s/g, "");
-			document.getElementById("pas2").value=document.getElementById("pas2").value.replace(/\s/g, "");
-			document.getElementById("in").value=document.getElementById("in").value.replace(/\s/g, "");
-			//every coding needs a password, and 'cuz of mistyping it is need twice
-			//the pass and the input text has to be a 2 to 10 000 length string without any spec char
-			if( document.getElementById("pas").value  == document.getElementById("pas2").value &&
-			 valid(document.getElementById("pas").value) && valid(document.getElementById("in").value) )
-			{
-				//if the coded text needs to be only just numbers
-				if(numbers)
-				{
-					//then go trough the input text, while go trough the password(may not just once)
-					for( str="", i=0, j=0 ; i < document.getElementById("in").value.length ; i++, j++)
-					{
-						if( j >= document.getElementById("pas").value.length )
-						{
-							j=0;
-						}
-						
-						//every char (place-32) in the input take to an other places in the charcode "list" (0-94) and get just the num split with a #
-						str+=( ( document.getElementById("in").value.charCodeAt(i)-32 )+( document.getElementById("pas").value.charCodeAt(j)-32 ) )+"#";
-						//there is no decrementing of the sum, so these sum is could be more than 94
-					}
-				}
-				else
-				{
-					//go trough the input text and the pass(may not just once)
-					for(str="", i=0, j=0 ; i < document.getElementById("in").value.length ; i++, j++)
-					{
-						if( j >= document.getElementById("pas").value.length )
-						{
-							j=0;
-						}
-						
-						//take the two actual char's "number"-32 (between 0-94) 
-						var a=document.getElementById("in").value.charCodeAt(i)-32;
-						var b=document.getElementById("pas").value.charCodeAt(j)-32;
-						
-						//and if these sum is more than 95 or eq, then the sum will less 95, and have to increse 32, cuz the prev decreasing
-						if( a + b >= 95 )
-						{
-							str+=String.fromCharCode( ( ( a+b )-95 )+32 );
-						}
-						else
-						{
-							str+=String.fromCharCode( ( a+b )+32 );
-						}
-					}
-					
-				}
-				
-			}
-			else
-			{
-				//if the two password aren't the same, write out into the output, or write out the other text
-				if( document.getElementById("pas").value != document.getElementById("pas2").value )
-				{	
-					str="Passwords are different";
-				}
-				else
-				{
-					str="Something is wrong (may the inputs have special character)";
-				}
-				//if the secure mode is active, then write out to the title
-				if(secure)
-				{
-					document.getElementById("title").textContent="Coder (Something is wrong)";
-				}
-			}
-			if(secure==false)
-			{
-				document.getElementById("out").value=str;
-			}
-			document.getElementById("out2").value=str;
-			document.getElementById("cpy").value="Copy";
-			document.getElementById("cpy2").value="Copy";
-		}
-		
-		//decoder for the coded texts
-		function decode(numbers)
-		{
-			document.getElementById("title").textContent="Coder";
-			//if the password or the input is 2-10 000 length without special chars
-			if( valid(document.getElementById("pas").value) && valid(document.getElementById("in").value) )
-			{
-				//if the inputs are just nums
-				if(numbers)
-				{	
-					//put every num into an array, but if the last char is #, then have to a little modify before the split
-					if( document.getElementById("in").value[document.getElementById("in").value.length-1] == "#" )
-					{
-						aray=document.getElementById("in").value.substring(0, document.getElementById("in").value.length-1).split("#");
-					}
-					else
-					{
-						aray=document.getElementById("in").value.split("#");
-					}
-					
-					//go trough the input and the pass(may not just once)
-					for(str="", i=0, j=0 ; i < aray.length ; i++, j++)
-					{
-						if( j >= document.getElementById("pas").value.length )
-						{
-							j=0;
-						}
-						//the input num take to the oroginal place (+64 cuz of the coder decreased) then write out with chars
-						str+=String.fromCharCode( parseInt( aray[i] )-document.getElementById("pas").value.charCodeAt(j)+64 );
-					}
-				}
-				else
-				{
-					//and if it is a coded text, then go trough the input and the pass(may not just once)
-					for(str="", i=0, j=0 ; i < document.getElementById("in").value.length ; i++, j++)
-					{
-						if( j >=  document.getElementById("pas").value.length )
-						{
-							j=0;
-						}
-						
-						//take the two actual char's "number"-32 (between 0-94) 
-						var a=document.getElementById("in").value.charCodeAt(i)-32;
-						var b=document.getElementById("pas").value.charCodeAt(j)-32;
-						
-						//if the decreased num is a negative num then, increasing with 95
-						//and increase with 32, cuz of the prev decreasing
-						if( a - b < 0 )
-						{
-							str+=String.fromCharCode( ( a-b )+95+32 );
-						}
-						else
-						{
-							str+=String.fromCharCode( a-b+32 );
-						}
-					}
-				}	
-			}
-			else
-			{
-				//if not valid, write out
-				str="Something is wrong (may the inputs have special character)";
-				//if the secure mode is active, then write out to the title
-				if(secure)
-				{
-					document.getElementById("title").textContent="Coder (Something is wrong)";
-				}
-			}
-			
-			if(secure==false)
-			{
-				document.getElementById("out").value=str;
-			}
-			document.getElementById("out2").value=str;
-			document.getElementById("cpy").value="Copy";
-			document.getElementById("cpy2").value="Copy";
-		}
-		
-		//deleting the texts(may the passwords too)
-		function del(all=false)
-		{
-			document.getElementById("title").textContent="Coder";
-			if(all)
-			{
-				document.getElementById("pas").value="";
-				document.getElementById("pas2").value="";
-			}
-			else if( ( document.getElementById("pas").value.length > 0 || document.getElementById("pas2").value.length > 0 ) && secure )
-			{
-				document.getElementById("title").textContent="Coder (THE PASSWORDS INPUT ARE NOT EMPTY)";
-			}
-			document.getElementById("out").value="";
-			document.getElementById("out2").value="";
-			document.getElementById("in").value="";
-			document.getElementById("cpy").value="Copy";
-			document.getElementById("cpy2").value="Copy";
-		}
-		
-		function valid(str)
-		{
-			//every input have to be between 2 and 10 000 char
-			if( str.length < 2 || str.length > 10000 )
-			{
-				return false;
-			}
-			else
-			{
-				//if it is a correct length string, check every char is between 32 to 126 
-				for( var i=0 ; i<str.length ; i++ )
-				{
-					if( str.charCodeAt(i) > 126 || str.charCodeAt(i) < 32 )
-					{
-						return false;
-					}
-				}
-				//if every character were correct then it is a valid text
-				return true;
-			}
-		}
-		
-		//ctrl+c the output to the clipboard 
-		function copy()
-		{
-			//selecting the invisible(0 opacity, heigth and width) textarea, cuz if the secure mode is on, then the selecting could be visible
-			//the original "out" textarea in secure mod just get the background text color, and unselectable class
-			document.getElementById("out2").select();
-			document.execCommand("copy");
-			document.getElementById("cpy").value="Copied";
-			document.getElementById("cpy2").value="Copied";
-			
-		}
-		
-		function securing()
-		{
-			//if actually it is secure then, switch off this mode, else switch on
-			if(secure)
-			{
-				secure=false;
-				//change the colors to green, then change the secure buton color to red
-				document.getElementById("pas").style.color="#00ff00";
-				document.getElementById("pas2").style.color="#00ff00";
-				document.getElementById("in").style.color="#00ff00";
-				document.getElementById("out").style.color="#00ff00";
-				document.getElementById("secbtn").style.color="#ff0000";
-				document.getElementById("secbtn").value="Secure mode(OFF)";
-				document.getElementById("title").textContent="Coder";
-				//remove the unselectable class
-				document.getElementById("pas").classList.remove("unsel");
-				document.getElementById("pas2").classList.remove("unsel");
-				document.getElementById("in").classList.remove("unsel");
-				document.getElementById("out").classList.remove("unsel");
-				//and copy the all time hided "out2" text to the simple output
-				document.getElementById("out").value=document.getElementById("out2").value;
-			}
-			else
-			{
-				secure=true;
-				//"disaperaing" the texts
-				document.getElementById("pas").style.color="#000000";
-				document.getElementById("pas2").style.color="#000000";
-				document.getElementById("in").style.color="#000000";
-				document.getElementById("out").style.color="#000000";
-				document.getElementById("secbtn").style.color="#000000";
-				document.getElementById("secbtn").value="Secure mode(ON)";
-				//add the unselectable class
-				document.getElementById("pas").classList.add("unsel");
-				document.getElementById("pas2").classList.add("unsel");
-				document.getElementById("in").classList.add("unsel");
-				document.getElementById("out").classList.add("unsel");
-				
-				//if there is selected tex, deselecting that
-				document.getElementById("pas").selectionStart=0;
-				document.getElementById("pas").selectionEnd=0;
-				document.getElementById("pas2").selectionStart=0;
-				document.getElementById("pas2").selectionEnd=0;
-				document.getElementById("in").selectionStart=0;
-				document.getElementById("in").selectionEnd=0;
-				document.getElementById("out").selectionStart=0;
-				document.getElementById("out").selectionEnd=0;
-				
-				if( document.getElementById("pas").value.length > 0 || document.getElementById("pas2").value.length > 0 )
-				{
-					document.getElementById("title").textContent="Coder (THE PASSWORDS INPUT ARE NOT EMPTY)";
-				}	
-				
-			}
-		}
-		
-		//change buttons text (click for open/close)
-		function changeBTNTex(id)
-		{
-			if( document.getElementById(id).value.indexOf("click for open") >= 0 )
-			{
-				document.getElementById(id).value=document.getElementById(id).value.replace("click for open", "click for close");
-			}
-			else
-			{
-				document.getElementById(id).value=document.getElementById(id).value.replace("click for close", "click for open");
-			}
-		}
-		
-		//change the "visibility"(the content of a html element)
-		function hider(tex, id)
-		{
-			if( document.getElementById(id).innerHTML.length==0 )
-			{
-				document.getElementById(id).innerHTML=tex;
-			}
-			else
-			{
-				document.getElementById(id).innerHTML="";
-			}
-		}
-	</script>
-</head>
-<body onLoad='del(true);document.getElementById("down").setAttribute("href", window.location.href);'>
-	<a id="down" download><input type="button" value="&#11015;"></a>
-	<p id="title">Coder<noscript> (Javascript disabled, this program needs javascript)</noscript></p>
-	<input type="button" id="howusebtn" value="How2Use(click for open):" onclick='hider(how2use, "howuse");changeBTNTex("howusebtn");'>
-	<div id="howuse"></div>
-	<br>
-	<input type="button" id="secbtn" value="Secure mode(ON)" onclick='if(secure){if(confirm("Your texts and passwords (length) WILL APPEARING!!! Are you sure?")){securing();}}else{securing();}'>
-	<input id="pas" type="password" class="unsel" maxlength="10000">
-	<input id="pas2" type="password" class="unsel" maxlength="10000">
-	<br>
-	<textarea id="in" class="unsel" rows="10" cols="73" maxlength="10000"></textarea>
-	<br>
-	<input type="button" value="Code" onClick="code();">
-	<input type="button" value="Decode" onClick="decode();">
-	<input type="button" value="Code[Nums]" onClick="code(true);">
-	<input type="button" value="Decode[Nums]" onClick="decode(true);">
-	<br>
-	<br>
-	<input type="button" value="Delete" onClick='if(confirm("DELETE the textareas (passwords REAMIN)?")){del();}'>
-	<input type="button" value="Delete ALL" onClick='if(confirm("DELETE ALL INPUT (you WILL LOSE your passwords)?")){del(true);}'>
-	<br>
-	<br>
-	<input type="button" id="cpy" value="Copy" onclick="copy();">
-	<br>
-	<textarea id="out" rows="10" cols="73" class="unsel" readonly="readonly"></textarea>
-	<textarea id="out2" rows="10" cols="73" readonly="readonly"></textarea>
-	<br>
-	<input type="button" id="cpy2" value="Copy" onclick="copy();">
-	<br>
-	<br>
-	<div id="chars"></div>
-	<input type="button" id="charsbtn" value="Characterlist(click for open):" onclick='hider(charlist, "chars"); changeBTNTex("charsbtn");'>
-</body>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Coder</title>
+    <style>
+      body {
+        background-color: #000000;
+        color: #00ff00;
+      }
+      input[type="button"] {
+        background-color: #00ff00;
+        color: #000000;
+        border-color: #00ff00;
+        border-style: solid;
+      }
+      #in {
+        background-color: #000000;
+        color: #000000;
+        border-color: #00ff00;
+        border-style: dashed;
+      }
+      #out {
+        background-color: #000000;
+        color: #000000;
+        border-color: #00ff00;
+        border-style: dashed;
+      }
+      #out2 {
+        opacity: 0;
+        height: 0;
+        width: 0;
+      }
+      #pas,
+      #pas2 {
+        background-color: #000000;
+        color: #000000;
+        border-color: #00ff00;
+        border-style: dotted;
+      }
+      input,
+      textarea,
+      div {
+        font-size: 1.4rem;
+      }
+      #down {
+        position: fixed;
+        right: 0px;
+        top: 0px;
+      }
+      #down > input {
+        padding: 0px;
+      }
+      .unsel {
+        cursor: default;
+        -webkit-touch-callout: none;
+        -webkit-user-select: none;
+        -khtml-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        -o-user-select: none;
+        user-select: none;
+      }
+    </style>
+    <script>
+      //declaring
+      let str;
+      let secure = true;
+      let charlist = "";
+      //go trough all usable character and put into the characterlist
+      for (var i = 32; i < 127; i++) {
+        if (i % 32 == 0) {
+          charlist += "<br>";
+        }
+        charlist += String.fromCharCode(i);
+      }
+
+      //take the original text and coding
+      //(default: coding to an other random text, and not to numbers)
+      function code(numbers = false) {
+        document.getElementById("title").textContent = "Coder";
+        //before coding, remove the white spaces
+        document.getElementById("pas").value = document
+          .getElementById("pas")
+          .value.replace(/\s/g, "");
+        document.getElementById("pas2").value = document
+          .getElementById("pas2")
+          .value.replace(/\s/g, "");
+        document.getElementById("in").value = document
+          .getElementById("in")
+          .value.replace(/\s/g, "");
+        //every coding needs a password, and 'cuz of mistyping it is need twice
+        //the pass and the input text has to be a 2 to 10 000 length string without any spec char
+        if (
+          document.getElementById("pas").value ==
+            document.getElementById("pas2").value &&
+          valid(document.getElementById("pas").value) &&
+          valid(document.getElementById("in").value)
+        ) {
+          //if the coded text needs to be only just numbers
+          if (numbers) {
+            //then go trough the input text, while go trough the password(may not just once)
+            for (
+              str = "", i = 0, j = 0;
+              i < document.getElementById("in").value.length;
+              i++, j++
+            ) {
+              if (j >= document.getElementById("pas").value.length) {
+                j = 0;
+              }
+
+              //every char (place-32) in the input take to an other places
+              //in the charcode "list" (0-94) and get just the num split with a #
+              str +=
+                document.getElementById("in").value.charCodeAt(i) -
+                32 +
+                (document.getElementById("pas").value.charCodeAt(j) - 32) +
+                "#";
+              //there is no decrementing of the sum, so these sum is could be more than 94
+            }
+          } else {
+            //go trough the input text and the pass(may not just once)
+            for (
+              str = "", i = 0, j = 0;
+              i < document.getElementById("in").value.length;
+              i++, j++
+            ) {
+              if (j >= document.getElementById("pas").value.length) {
+                j = 0;
+              }
+
+              //take the two actual char's "number"-32 (between 0-94)
+              var a = document.getElementById("in").value.charCodeAt(i) - 32;
+              var b = document.getElementById("pas").value.charCodeAt(j) - 32;
+
+              //and if these sum is more than 95 or eq, then the sum will less 95,
+              //and have to increse 32, cuz the prev decreasing
+              if (a + b >= 95) {
+                str += String.fromCharCode(a + b - 95 + 32);
+              } else {
+                str += String.fromCharCode(a + b + 32);
+              }
+            }
+          }
+        } else {
+          //if the two password aren't the same, write out into the output,
+          //or write out the other text
+          if (
+            document.getElementById("pas").value !=
+            document.getElementById("pas2").value
+          ) {
+            str = "Passwords are different";
+          } else {
+            str = "Something is wrong (may the inputs have special character)";
+          }
+          //if the secure mode is active, then write out to the title
+          if (secure) {
+            document.getElementById("title").textContent =
+              "Coder (Something is wrong)";
+          }
+        }
+        if (secure == false) {
+          document.getElementById("out").value = str;
+        }
+        document.getElementById("out2").value = str;
+        document.getElementById("cpy").value = "Copy";
+        document.getElementById("cpy2").value = "Copy";
+      }
+
+      //decoder for the coded texts
+      function decode(numbers) {
+        document.getElementById("title").textContent = "Coder";
+        //if the password or the input is 2-10 000 length without special chars
+        if (
+          valid(document.getElementById("pas").value) &&
+          valid(document.getElementById("in").value)
+        ) {
+          //if the inputs are just nums
+          if (numbers) {
+            //put every num into an array, but if the last char is #,
+            //then have to a little modify before the split
+            if (
+              document.getElementById("in").value[
+                document.getElementById("in").value.length - 1
+              ] == "#"
+            ) {
+              aray = document
+                .getElementById("in")
+                .value.substring(
+                  0,
+                  document.getElementById("in").value.length - 1
+                )
+                .split("#");
+            } else {
+              aray = document.getElementById("in").value.split("#");
+            }
+
+            //go trough the input and the pass(may not just once)
+            for (str = "", i = 0, j = 0; i < aray.length; i++, j++) {
+              if (j >= document.getElementById("pas").value.length) {
+                j = 0;
+              }
+              //the input num take to the oroginal place (+64 cuz of the coder decreased)
+              //then write out with chars
+              str += String.fromCharCode(
+                parseInt(aray[i]) -
+                  document.getElementById("pas").value.charCodeAt(j) +
+                  64
+              );
+            }
+          } else {
+            //and if it is a coded text, then go trough the input and the pass(may not just once)
+            for (
+              str = "", i = 0, j = 0;
+              i < document.getElementById("in").value.length;
+              i++, j++
+            ) {
+              if (j >= document.getElementById("pas").value.length) {
+                j = 0;
+              }
+
+              //take the two actual char's "number"-32 (between 0-94)
+              var a = document.getElementById("in").value.charCodeAt(i) - 32;
+              var b = document.getElementById("pas").value.charCodeAt(j) - 32;
+
+              //if the decreased num is a negative num then, increasing with 95
+              //and increase with 32, cuz of the prev decreasing
+              if (a - b < 0) {
+                str += String.fromCharCode(a - b + 95 + 32);
+              } else {
+                str += String.fromCharCode(a - b + 32);
+              }
+            }
+          }
+        } else {
+          //if not valid, write out
+          str = "Something is wrong (may the inputs have special character)";
+          //if the secure mode is active, then write out to the title
+          if (secure) {
+            document.getElementById("title").textContent =
+              "Coder (Something is wrong)";
+          }
+        }
+
+        if (secure == false) {
+          document.getElementById("out").value = str;
+        }
+        document.getElementById("out2").value = str;
+        document.getElementById("cpy").value = "Copy";
+        document.getElementById("cpy2").value = "Copy";
+      }
+
+      //deleting the texts(may the passwords too)
+      function del(all = false) {
+        document.getElementById("title").textContent = "Coder";
+        if (all) {
+          document.getElementById("pas").value = "";
+          document.getElementById("pas2").value = "";
+        } else if (
+          (document.getElementById("pas").value.length > 0 ||
+            document.getElementById("pas2").value.length > 0) &&
+          secure
+        ) {
+          document.getElementById("title").textContent =
+            "Coder (THE PASSWORDS INPUT ARE NOT EMPTY)";
+        }
+        document.getElementById("out").value = "";
+        document.getElementById("out2").value = "";
+        document.getElementById("in").value = "";
+        document.getElementById("cpy").value = "Copy";
+        document.getElementById("cpy2").value = "Copy";
+      }
+
+      function valid(str) {
+        //every input have to be between 2 and 10 000 char
+        if (str.length < 2 || str.length > 10000) {
+          return false;
+        } else {
+          //if it is a correct length string, check every char is between 32 to 126
+          for (var i = 0; i < str.length; i++) {
+            if (str.charCodeAt(i) > 126 || str.charCodeAt(i) < 32) {
+              return false;
+            }
+          }
+          //if every character were correct then it is a valid text
+          return true;
+        }
+      }
+
+      //ctrl+c the output to the clipboard
+      function copy() {
+        //selecting the invisible(0 opacity, heigth and width) textarea,
+        //cuz if the secure mode is on, then the selecting could be visible
+        //the original "out" textarea in secure mod just get the background text color,
+        //and unselectable class
+        document.getElementById("out2").select();
+        document.execCommand("copy");
+        document.getElementById("cpy").value = "Copied";
+        document.getElementById("cpy2").value = "Copied";
+      }
+
+      function securing() {
+        //if actually it is secure then, switch off this mode, else switch on
+        if (secure) {
+          secure = false;
+          //change the colors to green, then change the secure buton color to red
+          document.getElementById("pas").style.color = "#00ff00";
+          document.getElementById("pas2").style.color = "#00ff00";
+          document.getElementById("in").style.color = "#00ff00";
+          document.getElementById("out").style.color = "#00ff00";
+          document.getElementById("secbtn").style.color = "#ff0000";
+          document.getElementById("secbtn").value = "Secure mode(OFF)";
+          document.getElementById("title").textContent = "Coder";
+          //remove the unselectable class
+          document.getElementById("pas").classList.remove("unsel");
+          document.getElementById("pas2").classList.remove("unsel");
+          document.getElementById("in").classList.remove("unsel");
+          document.getElementById("out").classList.remove("unsel");
+          //and copy the all time hided "out2" text to the simple output
+          document.getElementById("out").value =
+            document.getElementById("out2").value;
+        } else {
+          secure = true;
+          //"disaperaing" the texts
+          document.getElementById("pas").style.color = "#000000";
+          document.getElementById("pas2").style.color = "#000000";
+          document.getElementById("in").style.color = "#000000";
+          document.getElementById("out").style.color = "#000000";
+          document.getElementById("secbtn").style.color = "#000000";
+          document.getElementById("secbtn").value = "Secure mode(ON)";
+          //add the unselectable class
+          document.getElementById("pas").classList.add("unsel");
+          document.getElementById("pas2").classList.add("unsel");
+          document.getElementById("in").classList.add("unsel");
+          document.getElementById("out").classList.add("unsel");
+
+          //if there is selected tex, deselecting that
+          document.getElementById("pas").selectionStart = 0;
+          document.getElementById("pas").selectionEnd = 0;
+          document.getElementById("pas2").selectionStart = 0;
+          document.getElementById("pas2").selectionEnd = 0;
+          document.getElementById("in").selectionStart = 0;
+          document.getElementById("in").selectionEnd = 0;
+          document.getElementById("out").selectionStart = 0;
+          document.getElementById("out").selectionEnd = 0;
+
+          if (
+            document.getElementById("pas").value.length > 0 ||
+            document.getElementById("pas2").value.length > 0
+          ) {
+            document.getElementById("title").textContent =
+              "Coder (THE PASSWORDS INPUT ARE NOT EMPTY)";
+          }
+        }
+      }
+
+      //change buttons text (click for open/close)
+      function changeBTNTex(id) {
+        if (document.getElementById(id).value.indexOf("click for open") >= 0) {
+          document.getElementById(id).value = document
+            .getElementById(id)
+            .value.replace("click for open", "click for close");
+        } else {
+          document.getElementById(id).value = document
+            .getElementById(id)
+            .value.replace("click for close", "click for open");
+        }
+      }
+
+      //change the "visibility"(the content of a html element)
+      function hider(tex, id) {
+        if (document.getElementById(id).innerHTML.length == 0) {
+          document.getElementById(id).innerHTML = tex;
+        } else {
+          document.getElementById(id).innerHTML = "";
+        }
+      }
+    </script>
+  </head>
+  <body
+    onLoad='del(true);document.getElementById("down").setAttribute("href", window.location.href);'>
+    <a id="down" download><input type="button" value="&#11015;" /></a>
+    <h1 id="title">
+      Coder<noscript>
+        (Javascript disabled, this program needs javascript)</noscript
+      >
+    </h1>
+    <input
+      type="button"
+      id="howusebtn"
+      value="How2Use(click for open):"
+      onclick='hider(how2use, "howuse");changeBTNTex("howusebtn");' />
+    <div id="howuse"></div>
+    <br />
+    <input
+      type="button"
+      id="secbtn"
+      value="Secure mode(ON)"
+      onclick='if(secure){if(confirm("Your texts and passwords (length) WILL APPEARING!!! Are you sure?")){securing();}}else{securing();}' />
+    <input id="pas" type="password" class="unsel" maxlength="10000" />
+    <input id="pas2" type="password" class="unsel" maxlength="10000" />
+    <br />
+    <textarea
+      id="in"
+      class="unsel"
+      rows="10"
+      cols="73"
+      maxlength="10000"></textarea>
+    <br />
+    <input type="button" value="Code" onClick="code();" />
+    <input type="button" value="Decode" onClick="decode();" />
+    <input type="button" value="Code[Nums]" onClick="code(true);" />
+    <input type="button" value="Decode[Nums]" onClick="decode(true);" />
+    <br />
+    <br />
+    <input
+      type="button"
+      value="Delete"
+      onClick='if(confirm("DELETE the textareas (passwords REAMIN)?")){del();}' />
+    <input
+      type="button"
+      value="Delete ALL"
+      onClick='if(confirm("DELETE ALL INPUT (you WILL LOSE your passwords)?")){del(true);}' />
+    <br />
+    <br />
+    <input type="button" id="cpy" value="Copy" onclick="copy();" />
+    <br />
+    <textarea
+      id="out"
+      rows="10"
+      cols="73"
+      class="unsel"
+      readonly="readonly"></textarea>
+    <textarea id="out2" rows="10" cols="73" readonly="readonly"></textarea>
+    <br />
+    <input type="button" id="cpy2" value="Copy" onclick="copy();" />
+    <br />
+    <br />
+    <div id="chars"></div>
+    <input
+      type="button"
+      id="charsbtn"
+      value="Characterlist(click for open):"
+      onclick='hider(charlist, "chars"); changeBTNTex("charsbtn");' />
+    <script>
+      const how2use = `<div style="margin:5px;">
+          It is a coder/decoder script, the first textarea is the input, 
+          the second is the output, the two text input at top are the passwords (password type input). 
+          (If you wana see the texts you need to switch off the secure mode.) If you write something 
+          text into the input textarea, and type the "key" into the password inputs (both 'cuz of misstyping), 
+          then you could make a coded text with the "Code" button. The script go trough the input text 
+          and the password (at same time), and "sum" every input char with every password char 
+          (technically every input char get an other place in the "charlist" like Caesar Code or Caesar Cipher), 
+          if the script at end of the password, then go to the first char of the password. The output get the 
+          coded text, then you could send this text to someone, and he/she able to decoding, if he/she has 
+          the key (password). You could copy to the clipboard the output text with "Copy" button. 
+          You could decoding the coded text, if you put the decoded text to the input, type in the password 
+          (to the first password input, second is not needed), then push the "Decode" button. The original text 
+          appear in the output textarea. If you have to coding with numbers, for steganography 
+          (eg.: you make a facebook math solving post where the 150/142, 151/171, 136/153, 158/149, 165/152, 160/136, 
+          135/161, 147/149, 156/133 nums need to sorting by increase, then the people solve the 
+          operations and make the list, but your man will knows that it could be a message, write 
+          the nums into the textarea, type in the "secretpass" password and decode the nums to 
+          the "citycentremcdonald" text, so he will knows, you are waiting him for a super secret meeting or something), 
+          you write in the text to the input, tpye in the passwords, then push the "Code[Nums]" button, 
+          and the script go trough the text and the password, like before, but this time, the "summed" numbers, 
+          stay just numbers with # marks, if these numbers with # put in the input textarea and push the 
+          "Decode[Nums]" button, then the script take all numbers into an array split at the # marks 
+          (don't matter the last char is num or #) and with the password decoding to the original text. 
+          The Delete buttons clear the textareas ("Delete all" the passwords too).
+        </div>
+        <h2>Limitations:</h2>
+        <ul style="list-style-type:square">
+          <li>
+            Inputs are only have just a few simple characters, at the bottom the last button shows them.
+          </li>
+          <li>
+            Space and other "white spaces" chars remove from all input before coding 
+            (at decoding, there is just alert messages).
+          </li>
+          <li>
+            All inputs have to be between 2 - 10 000 char.
+          </li>
+          <li>
+            The nums decoding work with only just # marks.
+          </li>
+          <li>
+            If your password is "appletree" and you coding the "Secretmessage" to "5VT_Ki\`KYURXR" 
+            and send to someone on a compromised line, may someone could wiretaping, then he/she 
+            write into the input textarea, and if type just the "apple" password he/she gets the 
+            "Secre(oZlopga", then he/she propably will figure out the second part of the password, 
+            and able to decode every message (coded with the "appletree" password).
+          </li>
+          <li>
+            This script tested on firefox (95.0.2) on a Linux, may some feature doesn't work on other Browsers.
+          </li>
+        </ul>
+        <h2>Features:</h2>
+        <ul style="list-style-type:square">
+          <li>
+            Secure mode: When it is switch on, every input and output unselectable and hided, 
+            if your monitor is hacked (eg.: in the Mr. robot), you still can make a secret message 
+            with secret passwords, if you have a keylogger or other kinda hack the secure mode doesn't work.
+          </li>
+          <li>
+            You could download this html file with the button at the right corner 
+            (or right click and download), this coder is a simple JavaScript with some html and css, 
+            without any kinda of jQuery, php, google fonts, remote scripts or anything, so you can use
+            offline (may you wana coding/decoding an all time offline, more unhackable pc/phone).
+          </li>
+        </ul>`;
+    </script>
+  </body>
 </html>
